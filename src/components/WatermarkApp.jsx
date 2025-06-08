@@ -395,6 +395,41 @@ export default function WatermarkApp({ language = 'en' }) {
             <p className="text-gray-600">{translations[language].uploadAnImage}</p>
           </header>
 
+          <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h2 className="text-xl font-semibold mb-4">
+              {translations[language].howItWorks}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-indigo-50 p-4 rounded-lg">
+                <div className="text-indigo-600 font-bold text-xl mb-2">1</div>
+                <h3 className="font-medium mb-2">
+                  {translations[language].uploadYourArt}
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  {translations[language].uploadAnyImage}
+                </p>
+              </div>
+              <div className="bg-indigo-50 p-4 rounded-lg">
+                <div className="text-indigo-600 font-bold text-xl mb-2">2</div>
+                <h3 className="font-medium mb-2">
+                  {translations[language].addYourSignature}
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  {translations[language].enterYourName}
+                </p>
+              </div>
+              <div className="bg-indigo-50 p-4 rounded-lg">
+                <div className="text-indigo-600 font-bold text-xl mb-2">3</div>
+                <h3 className="font-medium mb-2">
+                  {translations[language].downloadProtectedArt}
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  {translations[language].downloadYourArtwork}
+                </p>
+              </div>
+            </div>
+          </div>
+
           {notification && (
             <div className={`mb-4 p-3 rounded-lg text-white text-center transition-all 
               ${notification.type === 'error' ? 'bg-red-500' : 'bg-green-500'}`}>
