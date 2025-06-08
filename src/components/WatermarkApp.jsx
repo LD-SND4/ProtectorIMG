@@ -652,7 +652,7 @@ export default function WatermarkApp({ language = 'en' }) {
           </div>
           
           {/* Information section */}
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+      {/*     <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
             <h2 className="text-xl font-semibold mb-4">
               {translations[language].howItWorks}
             </h2>
@@ -685,7 +685,7 @@ export default function WatermarkApp({ language = 'en' }) {
                 </p>
               </div>
             </div>
-          </div>
+          </div> */}
           
           {/* Hidden canvas for processing */}
           <canvas ref={canvasRef} style={{ display: 'none' }} />
