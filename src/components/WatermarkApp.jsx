@@ -1,6 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { encode } from 'ts-steganography';
 import { translations } from '../translations';
+import ReCAPTCHA from 'react-google-recaptcha';
+
+// Replace these with your actual donation links
+const PAYPAL_DONATION_LINK = 'https://www.paypal.com/donate/?hosted_button_id=V9ZXQCWSRCZEE';
+const PAYONEER_DONATION_LINK = 'https://p.payoneer.com/YOUR_PAYONEER_LINK';
 
 export default function WatermarkApp({ language = 'en' }) {
   const [signature, setSignature] = useState('');
@@ -19,7 +24,96 @@ export default function WatermarkApp({ language = 'en' }) {
   const [notification, setNotification] = useState(null);
   const [showCaptcha, setShowCaptcha] = useState(false);
   const [isProcessingDownload, setIsProcessingDownload] = useState(false);
+  const [showDonationModal, setShowDonationModal] = useState(false);
+  const [donationThankYou, setDonationThankYou] = useState(false);
   const canvasRef = useRef(null);
+
+  // Show donation modal on every page load
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowDonationModal(true);
+    }, 3000); // Show after 3 seconds of page load
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleDonate = (platform) => {
+    setDonationThankYou(true);
+    // Open donation link in a new tab
+    const url = platform === 'paypal' ? PAYPAL_DONATION_LINK : PAYONEER_DONATION_LINK;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const DonationModal = ({ onClose }) => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 overflow-hidden">
+        <div className="p-6">
+          {donationThankYou ? (
+            <div className="text-center">
+              <div className="text-5xl mb-4">🎉</div>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">
+                {translations[language].thanksForSupport}
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Your support helps us keep improving this tool!
+              </p>
+              <button
+                onClick={onClose}
+                className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                {translations[language].close}
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-bold text-gray-800 mb-2">
+                  {translations[language].supportUs}
+                </h3>
+                <p className="text-gray-600">
+                  {translations[language].supportMessage}
+                </p>
+              </div>
+              
+              <div className="mb-6">
+                <p className="text-sm text-gray-500 uppercase tracking-wider mb-3">
+                  {translations[language].oneTimeDonation}
+                </p>
+                
+                <button
+                  onClick={() => handleDonate('paypal')}
+                  className="w-full mb-3 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg flex items-center justify-center transition-colors"
+                >
+                  <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.08c3.476 0 5.09.615 5.098.617.564.196 1.17.78 1.315 1.35.186.738.378 1.508.378 2.292 0 .42-.168.819-.48 1.105a.688.688 0 0 0-.25.515c0 .055.013.14.05.23.05.106.1.212.14.318.26.56.41 1.15.41 1.75 0 .28-.05.55-.15.79-.07.16-.18.3-.32.41.18.15.34.31.48.5.19.25.31.54.35.85.02.09.03.18.03.27 0 .41-.16.8-.44 1.09.01.1.01.18.01.27 0 .69-.12 1.36-.38 1.99-.16.38-.37.74-.63 1.06-.18.23-.39.44-.61.63-.28.24-.58.44-.89.6-.31.17-.64.31-.98.42-.34.11-.7.18-1.06.2-.08 0-.16.01-.24.01H8.136c-.14 0-.26.1-.31.24l-1.13 3.41c-.05.14-.17.24-.31.24l-1.32 1.64c-.07.08-.18.12-.29.12z"/>
+                  </svg>
+                  {translations[language].paypalDonate}
+                </button>
+                
+                <button
+                  onClick={() => handleDonate('payoneer')}
+                  className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg flex items-center justify-center transition-colors"
+                >
+                  <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M9.715 17.5h1.5l-.75-5.5h-1.5l.75 5.5zm-3.5 0h1.5l.25-5.5h-1.5l-.25 5.5zm7 0h1.5l-.25-5.5h-1.5l.25 5.5zm-10.5 0h1.5l.75-5.5h-1.5l-.75 5.5zm14.5-5.5h-1.5l-.5 5.5h1.5l.5-5.5zm-5.25 0h-1.5l.5 5.5h1.5l-.5-5.5zm-4.5-8h10.5v3h-10.5v-3zm0 4h10.5v3h-10.5v-3z"/>
+                  </svg>
+                  {translations[language].payoneerDonate}
+                </button>
+              </div>
+              
+              <div className="flex justify-center">
+                <button
+                  onClick={onClose}
+                  className="text-sm text-gray-500 hover:text-gray-700"
+                >
+                  {translations[language].maybeLater}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 
   // Show notification for a few seconds
   const showNotification = (message, type = 'success') => {
@@ -244,55 +338,80 @@ export default function WatermarkApp({ language = 'en' }) {
   };
 
   const CaptchaModal = ({ onVerify, onClose, language }) => {
-    const [captcha, setCaptcha] = useState(generateCaptcha());
-    const [input, setInput] = useState('');
+    const [verified, setVerified] = useState(false);
     const [error, setError] = useState('');
+    const recaptchaRef = useRef(null);
+
+    // Replace with your reCAPTCHA site key (get it from Google reCAPTCHA admin console)
+    const RECAPTCHA_SITE_KEY = '6LdU71krAAAAABCSGrwFEdIWWonvuUVWi2P6xlcB';
+
+    const handleVerify = (token) => {
+      if (token) {
+        setVerified(true);
+        setError('');
+      }
+    };
+
+    const handleExpired = () => {
+      setVerified(false);
+      setError(translations[language].captchaExpired || 'reCAPTCHA expired. Please verify again.');
+    };
+
+    const handleError = () => {
+      setVerified(false);
+      setError(translations[language].captchaError || 'Error verifying reCAPTCHA. Please try again.');
+    };
 
     const handleSubmit = (e) => {
       e.preventDefault();
-      if (input.toUpperCase() === captcha) {
-        onVerify();
-        onClose();
-      } else {
-        setError(translations[language].captchaError);
-        setCaptcha(generateCaptcha());
-        setInput('');
+      if (!verified) {
+        setError(translations[language].captchaRequired || 'Please complete the reCAPTCHA verification.');
+        return;
       }
+      onVerify();
+      onClose();
     };
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white p-6 rounded-lg max-w-sm w-full">
-          <h3 className="text-lg font-medium mb-4">{translations[language].captchaInstructions}</h3>
-          <div className="mb-4 p-4 bg-gray-100 text-2xl font-mono text-center tracking-widest">
-            {captcha}
-          </div>
+          <h3 className="text-lg font-medium mb-4">
+            {translations[language].captchaInstructions || 'Verify you\'re human'}
+          </h3>
+          
           <form onSubmit={handleSubmit}>
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              className="w-full p-2 border rounded mb-2"
-              placeholder={translations[language].captchaPlaceholder}
-              required
-            />
-            {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
-            <div className="flex justify-between">
+            <div className="flex justify-center mb-4">
+              <ReCAPTCHA
+                ref={recaptchaRef}
+                sitekey={RECAPTCHA_SITE_KEY}
+                onChange={handleVerify}
+                onExpired={handleExpired}
+                onErrored={handleError}
+                size="normal"
+                theme="light"
+              />
+            </div>
+            
+            {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
+            
+            <div className="flex justify-end gap-3">
               <button
                 type="button"
-                onClick={() => {
-                  setCaptcha(generateCaptcha());
-                  setError('');
-                }}
-                className="text-sm text-blue-600 hover:text-blue-800"
+                onClick={onClose}
+                className="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
               >
-                {translations[language].captchaRefresh}
+                {translations[language].cancel || 'Cancel'}
               </button>
               <button
                 type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                disabled={!verified}
+                className={`px-4 py-2 text-white rounded transition-colors ${
+                  verified 
+                    ? 'bg-blue-600 hover:bg-blue-700' 
+                    : 'bg-blue-400 cursor-not-allowed'
+                }`}
               >
-                {translations[language].captchaVerify}
+                {translations[language].verify || 'Verify'}
               </button>
             </div>
           </form>
@@ -386,6 +505,11 @@ export default function WatermarkApp({ language = 'en' }) {
 
   return (
     <div className="relative">
+      {showDonationModal && (
+        <div className="fixed inset-0 z-50">
+          <DonationModal onClose={() => setShowDonationModal(false)} />
+        </div>
+      )}
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 p-4 sm:p-6 md:p-8">
         <div className="max-w-4xl mx-auto">
           <header className="mb-8 text-center">
