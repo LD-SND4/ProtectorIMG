@@ -5,7 +5,7 @@ import ReCAPTCHA from 'react-google-recaptcha';
 
 // Replace these with your actual donation links
 const PAYPAL_DONATION_LINK = 'https://www.paypal.com/donate/?hosted_button_id=V9ZXQCWSRCZEE';
-const PAYONEER_DONATION_LINK = 'https://p.payoneer.com/YOUR_PAYONEER_LINK';
+// const PAYONEER_DONATION_LINK = 'https://p.payoneer.com/YOUR_PAYONEER_LINK';
 
 export default function WatermarkApp({ language = 'en' }) {
   const [signature, setSignature] = useState('');
@@ -25,7 +25,7 @@ export default function WatermarkApp({ language = 'en' }) {
   const [showCaptcha, setShowCaptcha] = useState(false);
   const [isProcessingDownload, setIsProcessingDownload] = useState(false);
   const [showDonationModal, setShowDonationModal] = useState(false);
-  const [donationThankYou, setDonationThankYou] = useState(false);
+  const [donationStatus, setDonationStatus] = useState(null); // null: not interacted, 'considered': closed without donating, 'donated': completed donation
   const canvasRef = useRef(null);
 
   // Show donation modal on every page load
@@ -37,30 +37,65 @@ export default function WatermarkApp({ language = 'en' }) {
   }, []);
 
   const handleDonate = (platform) => {
-    setDonationThankYou(true);
     // Open donation link in a new tab
     const url = platform === 'paypal' ? PAYPAL_DONATION_LINK : PAYONEER_DONATION_LINK;
     window.open(url, '_blank', 'noopener,noreferrer');
+    
+    // TODO: Implement PayPal Webhook verification
+    // 1. Create an order ID when donation starts
+    // 2. Set up a webhook endpoint to receive payment notifications
+    // 3. Verify payment status before setting donation status
+    // 4. Update user's status in your database
+    
+    // For now, we'll optimistically assume the donation was successful
+    setDonationStatus('donated');
+    setShowDonationModal(false);
+  };
+  
+  const handleCloseModal = () => {
+    // If user closes without donating, set status to 'considered'
+    if (donationStatus === null) {
+      setDonationStatus('considered');
+    }
+    setShowDonationModal(false);
   };
 
   const DonationModal = ({ onClose }) => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 overflow-hidden">
         <div className="p-6">
-          {donationThankYou ? (
+          {donationStatus === 'donated' ? (
             <div className="text-center">
-              <div className="text-5xl mb-4">🎉</div>
+              <div className="text-center">
+                <div className="text-5xl mb-4">🎉</div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">
+                  {translations[language].thanksForSupport || 'Thank You for Your Support!'}
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Your support helps us keep improving this tool and is greatly appreciated!
+                </p>
+                <button
+                  onClick={handleCloseModal}
+                  className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors"
+                >
+                  {translations[language].close || 'Close'}
+                </button>
+              </div>
+            </div>
+          ) : donationStatus === 'considered' ? (
+            <div className="text-center">
+              <div className="text-4xl mb-4">🙏</div>
               <h3 className="text-xl font-bold text-gray-800 mb-2">
-                {translations[language].thanksForSupport}
+                {translations[language].thanksForConsidering || 'Thanks for Considering!'}
               </h3>
               <p className="text-gray-600 mb-6">
-                Your support helps us keep improving this tool!
+                We appreciate you considering to support us. You can always donate later from the menu.
               </p>
               <button
-                onClick={onClose}
+                onClick={handleCloseModal}
                 className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors"
               >
-                {translations[language].close}
+                {translations[language].close || 'Close'}
               </button>
             </div>
           ) : (
@@ -89,6 +124,7 @@ export default function WatermarkApp({ language = 'en' }) {
                   {translations[language].paypalDonate}
                 </button>
                 
+                {/* Payoneer donation button commented out
                 <button
                   onClick={() => handleDonate('payoneer')}
                   className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg flex items-center justify-center transition-colors"
@@ -98,14 +134,18 @@ export default function WatermarkApp({ language = 'en' }) {
                   </svg>
                   {translations[language].payoneerDonate}
                 </button>
+                */}
               </div>
               
               <div className="flex justify-center">
                 <button
-                  onClick={onClose}
+                  onClick={() => {
+                    setDonationStatus('considered');
+                    setShowDonationModal(false);
+                  }}
                   className="text-sm text-gray-500 hover:text-gray-700"
                 >
-                  {translations[language].maybeLater}
+                  {translations[language].maybeLater || 'Maybe Later'}
                 </button>
               </div>
             </>
