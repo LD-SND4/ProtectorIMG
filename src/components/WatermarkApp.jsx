@@ -39,17 +39,19 @@ export default function WatermarkApp({ language = 'en' }) {
   const handleDonate = (platform) => {
     // Open donation link in a new tab
     const url = platform === 'paypal' ? PAYPAL_DONATION_LINK : PAYONEER_DONATION_LINK;
-    window.open(url, '_blank', 'noopener,noreferrer');
+    const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
     
-    // TODO: Implement PayPal Webhook verification
-    // 1. Create an order ID when donation starts
-    // 2. Set up a webhook endpoint to receive payment notifications
-    // 3. Verify payment status before setting donation status
-    // 4. Update user's status in your database
-    
-    // For now, we'll optimistically assume the donation was successful
+    // Set donation status to 'donated' to show thank you message
     setDonationStatus('donated');
-    setShowDonationModal(false);
+    
+    // Keep the modal open to show the thank you message
+    setShowDonationModal(true);
+    
+    // Optional: You can add a check here to see if the window was closed
+    // and handle it accordingly, but this is just a basic implementation
+    if (newWindow) {
+      newWindow.focus();
+    }
   };
   
   const handleCloseModal = () => {
