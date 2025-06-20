@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { encode } from 'ts-steganography';
 import { translations } from '../translations';
-import ReCAPTCHA from 'react-google-recaptcha';
+
 
 // Replace these with your actual donation links
 const PAYPAL_DONATION_LINK = 'https://www.paypal.com/donate/?hosted_button_id=V9ZXQCWSRCZEE';
@@ -22,7 +22,6 @@ export default function WatermarkApp({ language = 'en' }) {
   const [isDragging, setIsDragging] = useState(false);
   const [isDraggingSignature, setIsDraggingSignature] = useState(false);
   const [notification, setNotification] = useState(null);
-  const [showCaptcha, setShowCaptcha] = useState(false);
   const [isProcessingDownload, setIsProcessingDownload] = useState(false);
   const [showDonationModal, setShowDonationModal] = useState(false);
   const [donationStatus, setDonationStatus] = useState(null); // null: not interacted, 'considered': closed without donating, 'donated': completed donation
@@ -379,95 +378,9 @@ export default function WatermarkApp({ language = 'en' }) {
     }
   };
 
-  const CaptchaModal = ({ onVerify, onClose, language }) => {
-    const [verified, setVerified] = useState(false);
-    const [error, setError] = useState('');
-    const recaptchaRef = useRef(null);
-
-    // Replace with your reCAPTCHA site key (get it from Google reCAPTCHA admin console)
-    const RECAPTCHA_SITE_KEY = '6LdU71krAAAAABCSGrwFEdIWWonvuUVWi2P6xlcB';
-
-    const handleVerify = (token) => {
-      if (token) {
-        setVerified(true);
-        setError('');
-      }
-    };
-
-    const handleExpired = () => {
-      setVerified(false);
-      setError(translations[language].captchaExpired || 'reCAPTCHA expired. Please verify again.');
-    };
-
-    const handleError = () => {
-      setVerified(false);
-      setError(translations[language].captchaError || 'Error verifying reCAPTCHA. Please try again.');
-    };
-
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      if (!verified) {
-        setError(translations[language].captchaRequired || 'Please complete the reCAPTCHA verification.');
-        return;
-      }
-      onVerify();
-      onClose();
-    };
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white p-6 rounded-lg max-w-sm w-full">
-          <h3 className="text-lg font-medium mb-4">
-            {translations[language].captchaInstructions || 'Verify you\'re human'}
-          </h3>
-          
-          <form onSubmit={handleSubmit}>
-            <div className="flex justify-center mb-4">
-              <ReCAPTCHA
-                ref={recaptchaRef}
-                sitekey={RECAPTCHA_SITE_KEY}
-                onChange={handleVerify}
-                onExpired={handleExpired}
-                onErrored={handleError}
-                size="normal"
-                theme="light"
-              />
-            </div>
-            
-            {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
-            
-            <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
-              >
-                {translations[language].cancel || 'Cancel'}
-              </button>
-              <button
-                type="submit"
-                disabled={!verified}
-                className={`px-4 py-2 text-white rounded transition-colors ${
-                  verified 
-                    ? 'bg-blue-600 hover:bg-blue-700' 
-                    : 'bg-blue-400 cursor-not-allowed'
-                }`}
-              >
-                {translations[language].verify || 'Verify'}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
-  };
-
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!watermarkedImage) return;
-    setShowCaptcha(true);
-  };
-
-  const handleVerifiedDownload = async () => {
+    
     setIsProcessingDownload(true);
     try {
       const protectedImage = await applySteganography(watermarkedImage);
@@ -555,9 +468,19 @@ export default function WatermarkApp({ language = 'en' }) {
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 p-4 sm:p-6 md:p-8">
         <div className="max-w-4xl mx-auto">
           <header className="mb-8 text-center">
-            <h1 className="text-3xl font-bold text-indigo-600 mb-2">
-              {translations[language].appTitle}
-            </h1>
+            <div className="flex justify-center items-center gap-4 mb-2">
+              <h1 className="text-3xl font-bold text-indigo-600">
+                {translations[language].appTitle}
+              </h1>
+              <button 
+                onClick={() => setShowDonationModal(true)}
+                className="inline-flex items-center px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded-full text-sm font-medium transition-colors"
+                title={translations[language].supportUs}
+              >
+                <span className="mr-1">❤️</span>
+                {translations[language].donate || 'Donate'}
+              </button>
+            </div>
             <p className="text-gray-600">{translations[language].uploadAnImage}</p>
           </header>
 
@@ -862,14 +785,7 @@ export default function WatermarkApp({ language = 'en' }) {
         </div>
       </div>
       
-      {/* Add the CAPTCHA modal at the end of your component */}
-      {showCaptcha && (
-        <CaptchaModal
-          onVerify={handleVerifiedDownload}
-          onClose={() => setShowCaptcha(false)}
-          language={language}
-        />
-      )}
+
     </div>
   );
 }
